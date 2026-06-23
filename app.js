@@ -2,25 +2,29 @@
 const initialLanguages = [
   { id:"python", name:"Python", icon:"🐍", blurb:"Скрипты, автоматизация, анализ данных.",
     lessons:[
-      {id:"py-1", title:"Урок 1: Введение", description:"Знакомство с Python.", task:"Выведи 'Hello, Astro Koddi' через print()."},
+      {id:"py-1", title:"Урок 1: Введение", description:"Знакомство с Python.", task:"Выведи 'Hello, Astro Koddi' через print().",
+        content: `print() — встроенная функция Python для вывода текста в консоль.\nПример:\nprint('Hello, Astro Koddi')`},
       {id:"py-2", title:"Урок 2: Переменные", description:"Типы данных и переменные.", task:"Создай переменные с именем и возрастом."},
       {id:"py-3", title:"Урок 3: Циклы и списки", description:"Списки и циклы.", task:"Посчитай сумму чисел в списке."},
     ]},
   { id:"javascript", name:"JavaScript", icon:"⚡", blurb:"Веб, интерактив и фронтенд-магия.",
     lessons:[
-      {id:"js-1", title:"Урок 1: Введение", description:"Что такое JS.", task:"Выведи console.log с приветствием."},
+      {id:"js-1", title:"Урок 1: Введение", description:"Что такое JS.", task:"Выведи console.log с приветствием.",
+        content: `console.log() — функция для вывода в консоль в JavaScript.\nПример:\nconsole.log('Hello, Astro Koddi');`},
       {id:"js-2", title:"Урок 2: Функции", description:"let, const, функции.", task:"Напиши функцию суммы двух чисел."},
       {id:"js-3", title:"Урок 3: Массивы", description:"Работа с массивами.", task:"Отфильтруй чётные числа массива."},
     ]},
   { id:"bash", name:"Linux Bash", icon:"💻", blurb:"Терминал, скрипты, автоматизация.",
     lessons:[
-      {id:"sh-1", title:"Урок 1: Введение", description:"Навигация по ФС.", task:"Выведи список файлов: ls -la."},
+      {id:"sh-1", title:"Урок 1: Введение", description:"Навигация по ФС.", task:"Выведи список файлов: ls -la.",
+        content: `echo — команда для вывода текста в терминале.\nПример:\necho 'Hello, Astro Koddi'`},
       {id:"sh-2", title:"Урок 2: Файлы", description:"cp, mv, mkdir, rm.", task:"Создай папку и скопируй файл."},
       {id:"sh-3", title:"Урок 3: Скрипты", description:"Автоматизация.", task:"Напиши скрипт-бэкап папки."},
     ]},
   { id:"cpp", name:"C++", icon:"🚀", blurb:"Низкоуровневая мощь и скорость.",
     lessons:[
-      {id:"cpp-1", title:"Урок 1: Введение", description:"Структура программы.", task:"Скомпилируй Hello World."},
+      {id:"cpp-1", title:"Урок 1: Введение", description:"Структура программы.", task:"Скомпилируй Hello World.",
+        content: `В C++ вывод в консоль обычно через std::cout.\nПример:\ncout << "Hello, Astro Koddi" << endl;`},
       {id:"cpp-2", title:"Урок 2: Указатели", description:"Память и указатели.", task:"Измени значение через указатель."},
       {id:"cpp-3", title:"Урок 3: Массивы", description:"Работа с памятью.", task:"Реализуй работу с массивом."},
     ]},
@@ -42,6 +46,15 @@ const starters = {
 
 const XP_PER_LESSON = 100, XP_PER_LEVEL = 500, KEY = "astro-koddi-v1";
 
+// Простые клиентские тесты для уроков. Для реальной проверки нужен backend.
+const LESSON_TESTS = {
+  'py-1': { lang: 'python', type: 'contains', pattern: /print\s*\(\s*['\"]\s*Hello\s*,?\s*Astro\s+Koddi\s*['\"]\s*\)/i },
+  'js-1': { lang: 'javascript', type: 'output', expected: /Hello[,\s]*Astro\s+Koddi/i },
+  'sh-1': { lang: 'bash', type: 'contains', pattern: /echo\s+['\"]?Hello[,\s]*Astro\s+Koddi['\"]?/i },
+  'cpp-1': { lang: 'cpp', type: 'contains', pattern: /cout\s*<<\s*['\"]?Hello[,\s]*Astro\s+Koddi['\"]?/i },
+};
+
+
 // Админские учётные данные (локально, для демонстрации)
 const ADMIN_EMAIL = "r09091209@gmail.com";
 const ADMIN_PASSWORD = "Santana-20-10";
@@ -54,6 +67,9 @@ let state = {
   view: "home", selectedLang: null,
   query: "", filter: "all",
 };
+
+state._passed = state._passed || {};
+state._learned = state._learned || {};
 
 function load(){
   try{
@@ -79,7 +95,7 @@ window.addEventListener('DOMContentLoaded', ()=>{
   if(!state.user){ setTimeout(()=>{ openAuth(); render(); }, 120); }
   render();
 });
-function save(){ const {user,xp,completed,languages,users}=state; localStorage.setItem(KEY, JSON.stringify({user,xp,completed,languages,users})); }
+function save(){ const {user,xp,completed,languages,users,_passed,_learned}=state; localStorage.setItem(KEY, JSON.stringify({user,xp,completed,languages,users,_passed,_learned})); }
 const level = () => Math.floor(state.xp / XP_PER_LEVEL) + 1;
 const isAdmin = () => state.user && state.users.find(u=>u.email===state.user.email)?.role==="admin";
 
@@ -144,9 +160,9 @@ function restoreAdmin(){
   delete state._adminBackup;
   save(); render();
 }
-function addLesson(langId, title, description, task){
+function addLesson(langId, title, description, task, content){
   const lang=state.languages.find(l=>l.id===langId);
-  lang.lessons.push({id:langId+"-"+Date.now(), title, description, task}); save(); render();
+  lang.lessons.push({id:langId+"-"+Date.now(), title, description, task, content: content||''}); save(); render();
 }
 
 function progress(langId){
@@ -268,21 +284,30 @@ function renderLessons(){
 
 function lessonBlock(langId, les){
   const done=state.completed.includes(les.id);
+  const learned = !!state._learned[les.id];
   return `<div class="lesson ${done?'done':''}">
     <h3>${done?'✅':'🔒'} ${les.title}</h3>
     <p class="desc">${les.description}</p>
     <div class="task">$ ${les.task}</div>
+    <div class="learn">
+      <h4>Учебный блок</h4>
+      <p>${les.content? escapeHtml(les.content).replace(/\n/g,'<br/>') : 'В информатике принт (от англ. print — печатать) — это встроенная команда (функция) в языках программирования, которая выводит текст, числа или другие данные на экран монитора (в консоль или терминал).'}</p>
+      <button class="btn btn-ghost" id="learn-${les.id}" onclick="markLearned('${les.id}')" ${learned? 'disabled':''}>Я прочитал(а)</button>
+    </div>
     <div class="editor">
       <div class="editor-head">
         <span>editor.${langId}</span>
-        <button class="btn btn-primary" onclick="runCode('${les.id}','${langId}')">▶ Запустить</button>
+        <button class="btn btn-primary" id="run-${les.id}" onclick="runCode('${les.id}','${langId}')" ${learned? '':'disabled'}>▶ Запустить</button>
       </div>
       <textarea id="code-${les.id}">${escapeHtml(starters[langId]||"")}</textarea>
       <div class="output" id="out-${les.id}" style="display:none"></div>
     </div>
     <div style="margin-top:14px">
       ${done? `<span class="done-tag">✓ Пройдено (+100 XP)</span>`
-        : state.user? `<button class="btn btn-primary" onclick="completeLesson('${les.id}')">Отметить как пройденный</button>`
+        : state.user? `
+          <button class="btn btn-primary" id="mark-${les.id}" onclick="completeLesson('${les.id}')" ${state._passed[les.id]? '':'disabled'}>Отметить как пройденный</button>
+          <span id="check-${les.id}" style="margin-left:12px">${state._passed[les.id]? '✅ Код прошёл проверку':'⏳ Нажмите «▶ Запустить» для проверки'}</span>
+        `
         : `<button class="btn btn-ghost" onclick="openAuth()">Войдите, чтобы проходить</button>`}
     </div>
   </div>`;
@@ -291,9 +316,64 @@ function lessonBlock(langId, les){
 function runCode(lessonId, langId){
   const code=document.getElementById("code-"+lessonId).value;
   const out=document.getElementById("out-"+lessonId);
+  // Проверим, прочитал ли пользователь учебный блок
+  if(!state._learned[lessonId]){
+    const chk = document.getElementById('check-'+lessonId);
+    if(chk) chk.textContent = '❗ Сначала прочтите учебный блок и нажмите "Я прочитал(а)".';
+    alert('Пожалуйста, сначала прочтите учебный блок и нажмите "Я прочитал(а)".');
+    return;
+  }
   out.style.display="block";
-  out.textContent = langId==="javascript"? runJS(code)
-    : `// Симуляция запуска (${langId})\n// «Живое» выполнение доступно для JavaScript.\n// Твой код принят ✓`;
+  if(langId==="javascript"){
+    out.textContent = runJS(code);
+  } else {
+    out.textContent = `// Симуляция запуска (${langId})\n// «Живое» выполнение доступно для JavaScript.\n// Выполняется статическая проверка кода.`;
+  }
+
+  // Простая валидация по заранее заданным тестам
+  const test = LESSON_TESTS[lessonId];
+  let res = {ok:true, message:'Нет автоматической проверки для этого урока.'};
+  if(test){
+    if(test.type === 'contains'){
+      const ok = test.pattern.test(code);
+      res = {ok, message: ok? 'Код содержит ожидаемое выражение.' : 'Код не содержит ожидаемого выражения.'};
+    } else if(test.type === 'output' && langId === 'javascript'){
+      const logs = runJS(code);
+      const ok = test.expected.test(logs);
+      res = {ok, message: ok? 'Вывод соответствует ожидаемому.' : 'Вывод не соответствует ожидаемому.'};
+    }
+  }
+
+  const chk = document.getElementById('check-'+lessonId);
+  const markBtn = document.getElementById('mark-'+lessonId);
+  if(chk) chk.textContent = (res.ok? '✅ ' : '❌ ') + res.message;
+  if(markBtn) markBtn.disabled = !res.ok;
+  state._passed[lessonId] = !!res.ok;
+
+  // Если проверка успешна и пользователь авторизован — автоматически отмечаем урок как пройденный
+  if(res.ok){
+    if(!state.user){
+      // Попросим войти перед сохранением прогресса
+      setTimeout(()=>{ openAuth(); }, 200);
+    } else {
+      if(!state.completed.includes(lessonId)){
+        // Небольшая задержка, чтобы пользователь увидел отметку ✅
+        setTimeout(()=>{
+          completeLesson(lessonId);
+          // После рендера плавно прокрутим к следующему уроку
+          setTimeout(()=>{
+            const codeEl = document.getElementById('code-'+lessonId);
+            if(codeEl){
+              const lessonEl = codeEl.closest('.lesson');
+              if(lessonEl && lessonEl.nextElementSibling){
+                lessonEl.nextElementSibling.scrollIntoView({behavior:'smooth', block:'center'});
+              }
+            }
+          }, 250);
+        }, 600);
+      }
+    }
+  }
 }
 
 function renderProfile(){
@@ -350,7 +430,12 @@ function renderAdmin(){
           <input id="newDesc" placeholder="Описание" />
           <input id="newTask" placeholder="Задание (task)" />
         </div>
+        <div class="form-row">
+          <textarea id="newContent" placeholder="Учебный блок / объяснение (markdown-подобный текст)" style="width:100%;min-height:80px"></textarea>
+        </div>
         <button class="btn btn-primary" style="margin-top:12px" onclick="submitLesson()">Добавить урок</button>
+        <button class="btn btn-danger" style="margin-top:12px;margin-left:8px;background:#8b2a5f;border-color:#6a1b47" onclick="resetCurriculumPrompt()">Сбросить курсы</button>
+        <button class="btn btn-warning" style="margin-top:12px;margin-left:8px;background:#6a5f2a;border-color:#5a4f1b" onclick="deleteAllLessonsPrompt()">Удалить все уроки</button>
       </div>
     </section>`;
 }
@@ -359,8 +444,9 @@ function submitLesson(){
   const t=document.getElementById("newTitle").value.trim();
   const d=document.getElementById("newDesc").value.trim();
   const k=document.getElementById("newTask").value.trim();
+  const c=document.getElementById("newContent").value.trim();
   if(!t){ alert("Введите название урока"); return; }
-  addLesson(lang, t, d||"Новый урок", k||"Выполни задание");
+  addLesson(lang, t, d||"Новый урок", k||"Выполни задание", c||"");
   alert("Урок добавлен! Проверь раздел «Языки».");
 }
 
@@ -418,4 +504,52 @@ function onLoginSuccess() {
     
     // Профиль менен Админканы да ушинтип ачасыз
     document.querySelector('.auth-only').classList.remove('hidden');
+}
+
+function markLearned(lessonId){
+  state._learned[lessonId] = true;
+  save();
+  // Перерисуем, чтобы включить кнопку Запустить
+  render();
+  // Слегка подсветим элемент
+  setTimeout(()=>{
+    const btn = document.getElementById('run-'+lessonId);
+    if(btn) btn.focus();
+  },120);
+}
+
+function resetCurriculumPrompt(){
+  if(!isAdmin()){ alert('Только админ может выполнять эту операцию.'); return; }
+  if(!confirm('Вы уверены? Это удалит все языки и прогресс учеников.\nЭто действие необратимо.')) return;
+  resetCurriculum();
+}
+
+function resetCurriculum(){
+  // Очистим языки и прогресс
+  state.languages = [];
+  state.completed = [];
+  state.xp = 0;
+  state._passed = {};
+  state._learned = {};
+  save();
+  render();
+  alert('Курсы и прогресс успешно очищены.');
+}
+
+function deleteAllLessonsPrompt(){
+  if(!isAdmin()){ alert('Только админ может выполнять эту операцию.'); return; }
+  if(!confirm('Вы уверены? Это удалит все уроки во всех языках и сбросит прогресс.\nЭто действие необратимо.')) return;
+  deleteAllLessons();
+}
+
+function deleteAllLessons(){
+  // Удаляем уроки внутри каждого языка, но сами языки оставляем
+  state.languages = state.languages.map(l => ({ ...l, lessons: [] }));
+  state.completed = [];
+  state.xp = 0;
+  state._passed = {};
+  state._learned = {};
+  save();
+  render();
+  alert('Все уроки удалены. Теперь вы можете добавлять новые уроки с нуля.');
 }
