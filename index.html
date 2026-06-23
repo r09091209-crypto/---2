@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Astro Koddi — кибер-академия программирования</title>
+  <link rel="stylesheet" href="style.css" />
+</head>-
+<body>
+  <!-- ХЕДЕР -->
+
+
+
+<header class="header">
+    <div class="container nav">
+        <a href="#" class="logo">🚀 ASTRO_KODDI</a>
+    <div class="nav-right">
+      <span class="user-badge hidden">@r09091209</span>
+      <button class="btn btn-ghost login-btn" id="openAuthBtn">Войти</button>
+      <button class="btn btn-ghost logout-btn hidden" id="logoutBtn">Выйти</button>
+    </div>
+
+    <nav class="nav-links">
+      <a href="#" data-nav="home">Главная</a>
+      <a href="#" data-nav="languages">Языки</a>
+      <a href="#" data-nav="profile">Профиль</a>
+      <a href="#" data-nav="admin" class="admin-only hidden">Админка</a>
+    </nav>
+    </div>
+</header>
+    
+
+  <!-- КОНТЕНТ -->
+  <main id="app"></main>
+
+  <!-- ФУТЕР -->
+  <footer class="footer">
+    <div class="ticker">
+      <div class="ticker-track" id="ticker"></div>
+    </div>
+    <div class="container footer-bottom">
+      <p>© 2026 Astro Koddi — кибер-академия будущего.</p>
+      <div class="socials">
+        <a href="#">GitHub</a><a href="#">Twitter</a><a href="#">Telegram</a>
+      </div> 
+    </div>
+  </footer>
+
+  <!-- МОДАЛКА АВТОРИЗАЦИИ -->
+  <div class="modal-overlay hidden" id="authModal">
+    <div class="modal">
+      <button class="modal-close" id="closeAuthBtn">✕</button>
+      <h2 id="authTitle">Вход в систему</h2>
+      <p class="modal-sub">Доступ к урокам и прогрессу</p>
+      <form id="authForm">
+        <input type="text" id="nickname" placeholder="Никнейм" class="hidden" />
+        <input type="email" id="email" placeholder="Email" required />
+        <input type="password" id="password" placeholder="Пароль" required />
+        <button type="submit" class="btn btn-primary full" id="authSubmit">Войти</button>
+      </form>
+      <p class="switch-auth">
+        <span id="switchText">Нет аккаунта?</span>
+        <a href="#" id="switchAuth">Зарегистрироваться</a>
+      </p>
+    </div>
+  </div>  
+
+  <script src="app.js"></script>
+</body>
+</html>
